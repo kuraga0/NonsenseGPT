@@ -1,25 +1,25 @@
 
-# nanoGPT
+# nonsenseGPT
 
-![nanoGPT](assets/nanogpt.jpg)
+*Forked from [nanoGPT](https://github.com/karpathy/nanoGPT)*
 
+## setup
 
----
+We are using [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management.
 
-**Update Nov 2025** nanoGPT has a new and improved cousin called [nanochat](https://github.com/karpathy/nanochat). It is very likely you meant to use/find nanochat instead. nanoGPT (this repo) is now very old and deprecated but I will leave it up for posterity.
-
----
-
-The simplest, fastest repository for training/finetuning medium-sized GPTs. It is a rewrite of [minGPT](https://github.com/karpathy/minGPT) that prioritizes teeth over education. Still under active development, but currently the file `train.py` reproduces GPT-2 (124M) on OpenWebText, running on a single 8XA100 40GB node in about 4 days of training. The code itself is plain and readable: `train.py` is a ~300-line boilerplate training loop and `model.py` a ~300-line GPT model definition, which can optionally load the GPT-2 weights from OpenAI. That's it.
-
-![repro124m](assets/gpt2_124M_loss.png)
-
-Because the code is so simple, it is very easy to hack to your needs, train new models from scratch, or finetune pretrained checkpoints (e.g. biggest one currently available as a starting point would be the GPT-2 1.3B model from OpenAI).
-
-## install
-
+``` sh
+uv venv --python 3.12.3
 ```
-pip install torch numpy transformers datasets tiktoken wandb tqdm
+
+``` sh
+source .venv/bin/activate
+# or
+source .venv/bin/activate.fish
+```
+
+``` sh
+uv pip install torch --default-index https://download.pytorch.org/whl/cpu 
+uv pip install numpy transformers datasets tiktoken wandb tqdm
 ```
 
 Dependencies:
@@ -34,71 +34,53 @@ Dependencies:
 
 ## quick start
 
-If you are not a deep learning professional and you just want to feel the magic and get your feet wet, the fastest way to get started is to train a character-level GPT on the works of Shakespeare. First, we download it as a single (1MB) file and turn it from raw text into one large stream of integers:
+Thsi instructions are for CPU training only because i dont have dedicated GPU.
 
 ```sh
-python data/shakespeare_char/prepare.py
+python data/nontrinsic_char/prepare.py
 ```
 
 This creates a `train.bin` and `val.bin` in that data directory. Now it is time to train your GPT. The size of it very much depends on the computational resources of your system:
 
-**I have a GPU**. Great, we can quickly train a baby GPT with the settings provided in the [config/train_shakespeare_char.py](config/train_shakespeare_char.py) config file:
-
-```sh
-python train.py config/train_shakespeare_char.py
-```
-
 If you peek inside it, you'll see that we're training a GPT with a context size of up to 256 characters, 384 feature channels, and it is a 6-layer Transformer with 6 heads in each layer. On one A100 GPU this training run takes about 3 minutes and the best validation loss is 1.4697. Based on the configuration, the model checkpoints are being written into the `--out_dir` directory `out-shakespeare-char`. So once the training finishes we can sample from the best model by pointing the sampling script at this directory:
 
 ```sh
-python sample.py --out_dir=out-shakespeare-char
+python train.py config/train_nontrinsic_char.py --device=cpu --compile=False --max_iters=20000 
+```
+
+```sh
+python sample.py --out_dir=out-nontrinsic-char --device=cpu --num_samples=5 --max_new_tokens=600 --temperature=0.9 --start="Hello"
 ```
 
 This generates a few samples, for example:
 
 ```
-ANGELO:
-And cowards it be strawn to my bed,
-And thrust the gates of my threats,
-Because he that ale away, and hang'd
-An one with him.
-
-DUKE VINCENTIO:
-I thank your eyes against it.
-
-DUKE VINCENTIO:
-Then will answer him to save the malm:
-And what have you tyrannous shall do this?
-
-DUKE VINCENTIO:
-If you have done evils of all disposition
-To end his power, the day of thrust for a common men
-That I leave, to fight with over-liking
-Hasting in a roseman.
+Hellops. You lose so that the dead bose are you do I am a bord a cinters destrops, very nice.
+greates down see the open on is a sygraming sense 20 h day obsital of actional many beltter a time difficult? How do the Fromacked on Helrous all because to have a new að ð¥ ð¤¬ ð¥ ð°ð
+He Linux message me, and while I am the sittly
+Aluminium is stow, you stall understand me start. Opend
+Metion, house what enter you will i should entries, there use sconver in the people the plance in cover my dominally of nonsenses is real the cantain makesense, nonsense screen what i'm plan, look it was a part
+---------------
+Hello, I have exaniate a know, what think users on this is!
+We not not onsense safe. Everyone everything should to about my disteast depenored includes; It's profects fungerst of until the patfor, something instead and minit is on you for to be free hundrink, all the what you it said
+epty !
+that something designice (what has grobed someone is that we're to be to.
+But with you can be about you're read it wordo what and in making with the being of duble them, and dienter is for the univeRsion
+Love informations, loady for a busing on the divice to profict of the two played in the namey good (so-perfor
+---------------
+Hello Head Here Ledays Ditconscords, Then future the person is a That?
+Books Waitific it was about with a sdaw time.
+A wait of the step What not awdanted day
+what tleep the break an face of out context that is got OD.
+And it acceptivide traesming the reound to like that a starts are one the buile internant of anything in there integrally eaters sol
+My grink p frain, but it much someone took read mark post to be the pooking in they ito is got sense and nonsense.
+Nonsense ears protes in just the project, it's a currest contRibutive and used
+he month
+Give you take post of the makes is a people windows
+---------------
 ```
 
 lol  `¯\_(ツ)_/¯`. Not bad for a character-level model after 3 minutes of training on a GPU. Better results are quite likely obtainable by instead finetuning a pretrained GPT-2 model on this dataset (see finetuning section later).
-
-**I only have a macbook** (or other cheap computer). No worries, we can still train a GPT but we want to dial things down a notch. I recommend getting the bleeding edge PyTorch nightly ([select it here](https://pytorch.org/get-started/locally/) when installing) as it is currently quite likely to make your code more efficient. But even without it, a simple train run could look as follows:
-
-```sh
-python train.py config/train_shakespeare_char.py --device=cpu --compile=False --eval_iters=20 --log_interval=1 --block_size=64 --batch_size=12 --n_layer=4 --n_head=4 --n_embd=128 --max_iters=2000 --lr_decay_iters=2000 --dropout=0.0
-```
-
-Here, since we are running on CPU instead of GPU we must set both `--device=cpu` and also turn off PyTorch 2.0 compile with `--compile=False`. Then when we evaluate we get a bit more noisy but faster estimate (`--eval_iters=20`, down from 200), our context size is only 64 characters instead of 256, and the batch size only 12 examples per iteration, not 64. We'll also use a much smaller Transformer (4 layers, 4 heads, 128 embedding size), and decrease the number of iterations to 2000 (and correspondingly usually decay the learning rate to around max_iters with `--lr_decay_iters`). Because our network is so small we also ease down on regularization (`--dropout=0.0`). This still runs in about ~3 minutes, but gets us a loss of only 1.88 and therefore also worse samples, but it's still good fun:
-
-```sh
-python sample.py --out_dir=out-shakespeare-char --device=cpu
-```
-Generates samples like this:
-
-```
-GLEORKEN VINGHARD III:
-Whell's the couse, the came light gacks,
-And the for mought you in Aut fries the not high shee
-bot thou the sought bechive in that to doth groan you,
-No relving thee post mose the wear
-```
 
 Not bad for ~3 minutes on a CPU, for a hint of the right character gestalt. If you're willing to wait longer, feel free to tune the hyperparameters, increase the size of the network, the context length (`--block_size`), the length of training, etc.
 
@@ -160,10 +142,8 @@ However, we have to note that GPT-2 was trained on (closed, never released) WebT
 Finetuning is no different than training, we just make sure to initialize from a pretrained model and train with a smaller learning rate. For an example of how to finetune a GPT on new text go to `data/shakespeare` and run `prepare.py` to download the tiny shakespeare dataset and render it into a `train.bin` and `val.bin`, using the OpenAI BPE tokenizer from GPT-2. Unlike OpenWebText this will run in seconds. Finetuning can take very little time, e.g. on a single GPU just a few minutes. Run an example finetuning like:
 
 ```sh
-python train.py config/finetune_shakespeare.py
+python train.py config/finetune_nontrinsic.py
 ```
-
-This will load the config parameter overrides in `config/finetune_shakespeare.py` (I didn't tune them much though). Basically, we initialize from a GPT2 checkpoint with `init_from` and train as normal, except shorter and with a small learning rate. If you're running out of memory try decreasing the model size (they are `{'gpt2', 'gpt2-medium', 'gpt2-large', 'gpt2-xl'}`) or possibly decreasing the `block_size` (context length). The best checkpoint (lowest validation loss) will be in the `out_dir` directory, e.g. in `out-shakespeare` by default, per the config file. You can then run the code in `sample.py --out_dir=out-shakespeare`:
 
 ```
 THEODORE:
