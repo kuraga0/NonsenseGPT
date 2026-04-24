@@ -3,6 +3,8 @@
 
 *Forked from [nanoGPT](https://github.com/karpathy/nanoGPT)*
 
+GPT trained on data from [Nontrinsic](https://nontrinsic.linerly.xyz/en/about).
+
 ## setup
 
 We are using [uv](https://docs.astral.sh/uv/getting-started/installation/) for dependency management.
