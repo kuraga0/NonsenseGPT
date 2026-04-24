@@ -2,7 +2,7 @@
 # good for debugging and playing on macbooks and such
 
 out_dir = 'out-nontrinsic-char'
-eval_interval = 250 # keep frequent because we'll overfit
+eval_interval = 100 # keep frequent because we'll overfit
 eval_iters = 20
 log_interval = 10
 
@@ -19,9 +19,9 @@ batch_size = 12
 block_size = 64 # context of up to X previous characters
 
 # baby GPT model :)
-n_layer = 5
+n_layer = 6
 n_head = 4
-n_embd = 128
+n_embd = 300
 dropout = 0.4
 
 learning_rate = 1e-3 # with baby networks can afford to go a bit higher
